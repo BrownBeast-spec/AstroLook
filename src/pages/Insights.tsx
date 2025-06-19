@@ -6,41 +6,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Navigation from "@/components/Navigation";
+import { generateInsights, generateReferences } from "@/lib/gemini";
+import { useToast } from "@/hooks/use-toast";
 
 const Insights = () => {
   const [objectName, setObjectName] = useState("");
   const [insights, setInsights] = useState("");
   const [references, setReferences] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleGetInsights = async () => {
     if (!objectName.trim()) return;
     
     setIsLoading(true);
-    // Simulate AI processing
-    setTimeout(() => {
-      setInsights(`${objectName} is a fascinating astronomical object that has captured the attention of researchers worldwide. Based on current astronomical research and observations:
-
-**Physical Characteristics:**
-This celestial object exhibits unique properties that distinguish it from similar objects in its class. Detailed spectroscopic analysis has revealed important compositional information about its structure and formation history.
-
-**Research Findings:**
-Recent studies have provided new insights into the object's behavior, evolution, and relationship with surrounding cosmic structures. The data suggests interesting patterns in its observable properties that contribute to our understanding of astrophysical processes.
-
-**Observational History:**
-Mount Abu Observatory has contributed valuable observations to the global understanding of this object, including photometric measurements and positional data that help track its characteristics over time.
-
-**Scientific Significance:**
-This object serves as an important reference point for comparative studies and helps astronomers better understand the broader category of similar celestial phenomena.`);
-      
-      setReferences([
-        "Smith, J. et al. (2023). 'Comprehensive Analysis of " + objectName + "' - Astrophysical Journal, 891, 23",
-        "Johnson, M. & Williams, K. (2022). 'Observational Studies from Mount Abu Observatory' - Monthly Notices, 456, 789",
-        "Brown, L. et al. (2023). 'Modern Insights into Celestial Objects' - Astronomy & Astrophysics, 234, 567",
-        "Davis, R. (2022). 'Multi-wavelength Analysis of Deep Sky Objects' - Annual Review of Astronomy, 12, 345"
+    setInsights("");
+    setReferences([]);
+    
+    try {
+      // Generate insights and references in parallel
+      const [insightsResult, referencesResult] = await Promise.all([
+        generateInsights(objectName),
+        generateReferences(objectName)
       ]);
+      
+      setInsights(insightsResult);
+      setReferences(referencesResult);
+      
+      toast({
+        title: "Insights Generated",
+        description: `Successfully generated insights for ${objectName}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate insights",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 3000);
+    }
   };
 
   return (
@@ -54,8 +59,8 @@ This object serves as an important reference point for comparative studies and h
             AI-Powered Astronomical Insights
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Enter the name of an astronomical object or event to get AI-generated insights, including a 
-            summary of research and characteristics.
+            Enter the name of an astronomical object or event to get AI-generated insights powered by Google Gemini, 
+            including a summary of research and characteristics.
           </p>
         </div>
 
@@ -100,7 +105,7 @@ This object serves as an important reference point for comparative studies and h
           <Alert className="bg-purple-500/10 border-purple-500/20 mb-8">
             <Brain className="h-4 w-4 text-purple-400" />
             <AlertDescription className="text-purple-300">
-              AI is gathering and analyzing research data about "{objectName}". Please wait...
+              Google Gemini AI is analyzing research data about "{objectName}". Please wait...
             </AlertDescription>
           </Alert>
         )}
@@ -111,7 +116,7 @@ This object serves as an important reference point for comparative studies and h
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <Brain className="mr-2 h-5 w-5 text-orange-500" />
-                  AI Analysis: {objectName}
+                  Gemini AI Analysis: {objectName}
                 </CardTitle>
                 <CardDescription className="text-gray-400">
                   Generated insights based on current astronomical research
@@ -134,7 +139,7 @@ This object serves as an important reference point for comparative studies and h
                     Research References
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    Related scientific papers and sources
+                    AI-generated reference examples (for demonstration purposes)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -159,7 +164,7 @@ This object serves as an important reference point for comparative studies and h
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Ready for Analysis</h3>
               <p className="text-gray-400 max-w-md mx-auto">
-                Enter the name of any astronomical object above to receive AI-generated insights and research summaries.
+                Enter the name of any astronomical object above to receive AI-generated insights powered by Google Gemini.
               </p>
             </CardContent>
           </Card>
